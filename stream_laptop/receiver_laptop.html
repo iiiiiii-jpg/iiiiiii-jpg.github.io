@@ -360,20 +360,12 @@ call.on('stream', function (remoteStream) {
 });
 
 
-call.on('close', function () {
+    call.on('close', function () {
+        document.getElementById("bt1").innerHTML = bt1;
+        document.getElementById("sen").innerHTML = "<p style='color:red'>With Source: Disconnected ??";
+        //if (!peer.disconnected) {join();}
 
-    document.getElementById("bt1").innerHTML = bt1;
-
-    document.getElementById("sen").innerHTML =
-        "<p style='color:red'>Reconnecting...";
-
-    setTimeout(function(){
-
-        join();
-
-    }, 1000);
-
-});
+      });
 
       call.on('error', function (err) {
         document.getElementById("bt1").innerHTML = bt1;

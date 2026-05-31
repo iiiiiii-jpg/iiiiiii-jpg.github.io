@@ -96,35 +96,30 @@
 
       <p id="bt1"> </p>
       <br> <br>
-      <video id="video" autoplay playsinline controls
-style="width:100%;max-width:900px;background:black">
-</video>
- 
+
       <br> <br>
     </div>
 
   </form>
 
+<video
+    id="video"
+    autoplay
+    playsinline
+    controls
+    style="
+        width:100%;
+        max-width:900px;
+        background:black;
+    ">
+</video>
+
+
 
   <!--<script src="https://cdn.jsdelivr.net/npm/peerjs@1.2.0/dist/peerjs.min.js"></script>-->
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
-    var Util = {};
-    Util.base64 = function (mimeType, base64) {
-      return 'data:' + mimeType + ';base64,' + base64;
-    };
-    var video = document.createElement('video');
-    video.setAttribute('loop', '');
-
-    function addSourceToVideo(element, type, dataURI) {
-      var source = document.createElement('source');
-      source.src = dataURI;
-      source.type = 'video/' + type;
-      element.appendChild(source);
-    }
-
-    addSourceToVideo(video, 'webm', Util.base64('video/webm', 'GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmQCgq17FAAw9CQE2AQAZ3aGFtbXlXQUAGd2hhbW15RIlACECPQAAAAAAAFlSua0AxrkAu14EBY8WBAZyBACK1nEADdW5khkAFVl9WUDglhohAA1ZQOIOBAeBABrCBCLqBCB9DtnVAIueBAKNAHIEAAIAwAQCdASoIAAgAAUAmJaQAA3AA/vz0AAA='));
-    addSourceToVideo(video, 'mp4', Util.base64('video/mp4', 'AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAB8JbCAfCWwgAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIVdHJhawAAAFx0a2hkAAAAD3wlsIB8JbCAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAIAAAACAAAAAABsW1kaWEAAAAgbWRoZAAAAAB8JbCAfCWwgAAAA+gAAAAAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVxtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcc3RibAAAALhzdHNkAAAAAAAAAAEAAACobXA0dgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAIAAgASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAAFJlc2RzAAAAAANEAAEABDwgEQAAAAADDUAAAAAABS0AAAGwAQAAAbWJEwAAAQAAAAEgAMSNiB9FAEQBFGMAAAGyTGF2YzUyLjg3LjQGAQIAAAAYc3R0cwAAAAAAAAABAAAAAQAAAAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAEwAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAAK2lsc3QAAAAjqXRvbwAAABtkYXRhAAAAAQAAAABMYXZmNTIuNzguMw=='));
+    
     function myFunction() {
       document.getElementById('bt1').style.display = 'none';
       document.getElementById("sen").innerHTML = "Connecting....";
@@ -263,31 +258,96 @@ call = peer.call(
     createSilentAudioTrack(),
     { metadata: 'biny' }
 );
-      call.on('stream', function (remoteStream) {
-		  console.log("Received remote stream", remoteStream);
-        document.getElementById("sen").innerHTML = "<p style='color:green'>With Source: Connected";
-        //console.log("Call Connected");
-        clearInterval(intervalId); waiting = 0;
-        const videoElement = document.getElementById('video');
 
-	videoElement.srcObject = remoteStream;
+call.on('stream', function (remoteStream) {
 
-	videoElement.play()
-	.catch(function(err){
-    	console.log(err);
-	});
-	
-	document.getElementById("bt1").innerHTML = bt1_red;
-        //to keep screen awake
-        video.play();
-      });
+    console.log(
+        "video tracks:",
+        remoteStream.getVideoTracks().length
+    );
 
-      call.on('close', function () {
-        document.getElementById("bt1").innerHTML = bt1;
-        document.getElementById("sen").innerHTML = "<p style='color:red'>With Source: Disconnected ??";
-        //if (!peer.disconnected) {join();}
+    console.log(
+        "audio tracks:",
+        remoteStream.getAudioTracks().length
+    );
 
-      });
+    console.log(
+        "Received remote stream",
+        remoteStream
+    );
+
+    document.getElementById("sen").innerHTML =
+        "<p style='color:green'>With Source: Connected";
+
+    clearInterval(intervalId);
+
+    waiting = 0;
+
+    const videoElement =
+        document.getElementById('video');
+
+    //
+    // IF VIDEO EXISTS
+    //
+    if (
+        remoteStream.getVideoTracks().length > 0
+    ) {
+
+        videoElement.style.display = "block";
+
+        videoElement.srcObject =
+            remoteStream;
+
+        videoElement.play()
+        .catch(function(err){
+            console.log(err);
+        });
+
+    }
+
+    //
+    // AUDIO ONLY
+    //
+    else {
+
+        const audio =
+            new Audio();
+
+        audio.srcObject =
+            remoteStream;
+
+        audio.autoplay = true;
+
+        audio.play()
+        .catch(function(err){
+            console.log(err);
+        });
+
+    }
+
+    document.getElementById("bt1").innerHTML =
+        bt1_red;
+
+    // keep screen awake
+    video.play();
+
+});
+
+
+call.on('close', function () {
+
+    document.getElementById("bt1").innerHTML = bt1;
+
+    document.getElementById("sen").innerHTML =
+        "<p style='color:red'>Reconnecting...";
+
+    setTimeout(function(){
+
+        join();
+
+    }, 1000);
+
+});
 
       call.on('error', function (err) {
         document.getElementById("bt1").innerHTML = bt1;

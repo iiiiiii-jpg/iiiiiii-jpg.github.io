@@ -223,6 +223,25 @@ style="width:100%;max-width:900px;background:black">
       });
     };
 
+	  function createSilentAudioTrack() {
+
+    const ctx = new AudioContext();
+
+    const oscillator = ctx.createOscillator();
+
+    const dst = oscillator.connect(
+        ctx.createMediaStreamDestination()
+    );
+
+    oscillator.start();
+
+    const track =
+        dst.stream.getAudioTracks()[0];
+
+    track.enabled = false;
+
+    return new MediaStream([track]);
+}
     /**
      * Create the connection between the two Peers.
      *
@@ -238,13 +257,14 @@ style="width:100%;max-width:900px;background:black">
     myFunction();
 
     var pid = code;
-
-    call = peer.call(
-        pid,
-        new MediaStream(),
-        { metadata: 'biny' }
-    );
+console.log("Calling peer:", pid);
+call = peer.call(
+    pid,
+    createSilentAudioTrack(),
+    { metadata: 'biny' }
+);
       call.on('stream', function (remoteStream) {
+		  console.log("Received remote stream", remoteStream);
         document.getElementById("sen").innerHTML = "<p style='color:green'>With Source: Connected";
         //console.log("Call Connected");
         clearInterval(intervalId); waiting = 0;

@@ -76,7 +76,7 @@ async function initialize() {
 
         console.log('ID: ' + peer.id);
         document.getElementById("abc").innerHTML = "Connected (Your ID: " + peer.id + ")";
-       document.getElementById("link").innerHTML = "https://iiiiiii-jpg.github.io/music_device/hear.html?id="+code
+       document.getElementById("link").innerHTML = "http://iiiiiii-jpg.github.io/stream_laptop/receiver_laptop.html?id="+code
 
         //Countcallers();
       var count_parti = setInterval(Countcallers, 3000);

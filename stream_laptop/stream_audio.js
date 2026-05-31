@@ -15,7 +15,8 @@ function getParams(){
   return params;
 }
 params = getParams();
-code = unescape(params["id"].split('#')[0]);
+//code = unescape(params["id"].split('#')[0]);
+code = "dailyprogram123"
 console.log(code);
 
 var lastPeerId = null;
@@ -124,10 +125,23 @@ peer.on('call', function (call) {
         // Show stream in some video/canvas element.
         //const audio2 = document.getElementById('audio2');
         //audio2.srcObject = remoteStream;
-        callers.push(call);
+       
+const exists = callers.some(function(c){
+
+    return c.peer === call.peer;
+
+});
+
+if (!exists) {
+
+    callers.push(call);
+
+}
+
     });
     call.on('close', function () {
         //no_of_p = no_of_p - 1;
+	callers = callers.filter(function(c){ return c.peer !== call.peer; });
         document.getElementById("parti").innerHTML = "Disconnectd with user " + call.peer;
     });
 
@@ -145,15 +159,36 @@ peer.on('call', function (call) {
 
 /*function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }*/
 
+
 function Countcallers() {
-        no_of_p = 0;
-        for (i = 0; i < callers.length; i++) {
-            if (callers[i].open) {
-                no_of_p = no_of_p + 1;
-            }
-        }
-        if (!peer.disconnected) { document.getElementById("abc").innerHTML = "Connected (Your ID: " + peer.id + ")"; }
-        document.getElementById("parti").innerHTML = "Participants: " + no_of_p;
+
+    // remove dead calls
+    callers = callers.filter(function(call){
+
+        return (
+            call &&
+            call.peerConnection &&
+            call.peerConnection.connectionState !==
+                "closed"
+        );
+
+    });
+
+    no_of_p = callers.length;
+
+    if (
+        peer &&
+        !peer.disconnected
+    ) {
+
+        document.getElementById("abc").innerHTML =
+            "Connected (Your ID: " +
+            peer.id +
+            ")";
+    }
+
+    document.getElementById("parti").innerHTML =
+        "Participants: " + no_of_p;
 }
 
 

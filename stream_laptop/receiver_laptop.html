@@ -110,6 +110,7 @@
     style="
         width:100%;
         max-width:900px;
+        min-height:120px;
         background:black;
     ">
 </video>
@@ -285,6 +286,7 @@ call = peer.call(
     { metadata: 'biny' }
 );
 
+
 call.on('stream', function (remoteStream) {
 
     console.log(
@@ -312,44 +314,57 @@ call.on('stream', function (remoteStream) {
     const videoElement =
         document.getElementById('video');
 
+
+
     //
-    // IF VIDEO EXISTS
+    // USE SAME VIDEO ELEMENT
+    // FOR BOTH AUDIO + VIDEO
+    //
+    videoElement.srcObject =
+        remoteStream;
+
+
+
+    //
+    // AUDIO ONLY MODE
     //
     if (
-        remoteStream.getVideoTracks().length > 0
+        remoteStream.getVideoTracks().length === 0
     ) {
 
-        videoElement.style.display = "block";
+        videoElement.style.height =
+            "120px";
 
-        videoElement.srcObject =
-            remoteStream;
-
-        videoElement.play()
-        .catch(function(err){
-            console.log(err);
-        });
+        videoElement.style.background =
+            "#111";
 
     }
 
+
+
     //
-    // AUDIO ONLY
+    // VIDEO MODE
     //
     else {
 
-        const audio =
-            new Audio();
+        videoElement.style.height =
+            "auto";
 
-        audio.srcObject =
-            remoteStream;
-
-        audio.autoplay = true;
-
-        audio.play()
-        .catch(function(err){
-            console.log(err);
-        });
+        videoElement.style.background =
+            "black";
 
     }
+
+
+
+    videoElement.play()
+    .catch(function(err){
+
+        console.log(err);
+
+    });
+
+
 
     document.getElementById("bt1").innerHTML =
         bt1_red;
@@ -358,7 +373,6 @@ call.on('stream', function (remoteStream) {
     video.play();
 
 });
-
 
     call.on('close', function () {
         document.getElementById("bt1").innerHTML = bt1;

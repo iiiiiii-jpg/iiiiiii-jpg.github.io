@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Caller</title>
+  <link rel="stylesheet" href="style1.css">
+</head>
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: black;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Add padding to containers */
+  .container {
+    padding: 16px;
+    background-color: white;
+  }
+
+  /* Full-width input fields */
+  input[type=text],
+  input[type=password] {
+    width: 100%;
+    padding: 15px;
+    margin: 5px 0 22px 0;
+    display: inline-block;
+    border: none;
+    background: #f1f1f1;
+  }
+
+  input[type=text]:focus,
+  input[type=password]:focus {
+    background-color: #ddd;
+    outline: none;
+  }
+
+  /* Overwrite default styles of hr */
+  hr {
+    border: 1px solid #f1f1f1;
+    margin-bottom: 25px;
+  }
+
+  /* Set a style for the submit button */
+  .registerbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 25px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    opacity: 0.9;
+  }
+
+  .registerbtn2 {
+    background-color: #db20a3;
+    color: white;
+    padding: 25px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    opacity: 0.9;
+  }
+
+  .registerbtn:hover {
+    opacity: 1;
+  }
+
+  /* Add a blue text color to links */
+  a {
+    color: dodgerblue;
+  }
+
+  /* Set a grey background color and center the text of the "sign in" section */
+  .signin {
+    background-color: #f1f1f1;
+    text-align: center;
+  }
+</style>
+
+<body>
+
+  <form action="" id="yew">
+    <div class="container">
+      <h3>GROUP HEARING</h3>
+      <p id="abc">Connecting to Server...</p>
+      <p id="sen">Wait...</p>
+      <hr>
+
+      <p id="bt1"> </p>
+      <br> <br>
+
+      <br> <br>
+    </div>
+
+  </form>
+
+<video
+    id="video"
+    autoplay
+    playsinline
+    controls
+    style="
+        width:100%;
+        max-width:900px;
+        background:black;
+    ">
+</video>
+
+
+
+  <!--<script src="https://cdn.jsdelivr.net/npm/peerjs@1.2.0/dist/peerjs.min.js"></script>-->
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script>
+    
+    function myFunction() {
+      document.getElementById('bt1').style.display = 'none';
+      document.getElementById("sen").innerHTML = "Connecting....";
+      //first hide the button
+      setTimeout(function () { //using setTimeout function
+        document.getElementById('bt1').style.display = 'inline'; //displaying the button again after 3000ms or 3 seconds
+      }
+        , 2000);
+    }
+
+    var code = ''
+    function getParams() {
+      var idx = document.URL.indexOf('?');
+      var params = new Array();
+      if (idx != -1) {
+        var pairs = document.URL.substring(idx + 1, document.URL.length).split('&');
+        for (var i = 0; i < pairs.length; i++) {
+          nameVal = pairs[i].split('=');
+          params[nameVal[0]] = nameVal[1];
+        }
+      }
+      return params;
+    }
+    params = getParams();
+    code = unescape(params["id"]);
+
+    var call = null;
+    var intervalId = null;
+    var waiting = 0;
+    var flip = true;
+    var lastPeerId = null;
+    var stream = null;
+    var peer = null; // own peer object
+    var mic_state = ""; var rqst = "";
+    var bt1 = "<button type='button' id= 'bt1' onclick='join();' class='registerbtn'>Click to Connect</button>";
+    var bt1_red = "<button type='button' id= 'bt1' onclick='call.close();' class='registerbtn2'>Click to Disconnect</button>";
+    
+    window.onbeforeunload = function(){
+      call.close();
+  }
+    initialize();
+    //start_stream();
+
+    async function initialize() {
+      document.getElementById("bt1").innerHTML = bt1;
+      // Create own peer object with connection to shared PeerJS server
+      peer = new Peer(null, {
+        debug: 2
+      });
+
+      peer.on('open', function (id) {
+        // Workaround for peer.reconnect deleting previous id
+        if (peer.id === null) {
+          //console.log('Received null id from peer open');
+          peer.id = lastPeerId;
+        } else {
+          lastPeerId = peer.id;
+        }
+
+        console.log('ID: ' + peer.id);
+        document.getElementById("abc").innerHTML = "Server: Connected.";
+        document.getElementById("sen").innerHTML = "Now connect with Source";
+      });
+      peer.on('connection', function (c) {
+        // Disallow incoming connections
+        c.on('open', function () {
+          c.send("Sender does not accept incoming connections");
+          setTimeout(function () { c.close(); }, 500);
+        });
+      });
+      peer.on('disconnected', function () {
+        document.getElementById("abc").innerHTML = "Server: Reconnecting..";
+
+        // Workaround for peer.reconnect deleting previous id
+        peer.id = lastPeerId;
+        peer._lastServerId = lastPeerId;
+        peer.reconnect();
+      });
+      peer.on('close', function () {
+        call = null;
+        document.getElementById("abc").innerHTML = "<p style='color:red'>" + "Server: Connection destroyed.";
+        //console.log('Connection destroyed');
+      });
+      peer.on('error', function (err) {
+        document.getElementById("sen").innerHTML = "<p style='color:red'>" + err;
+        //console.log(flip);
+        if (err.type=='peer-unavailable'){
+          if(flip)
+            document.getElementById("sen").innerHTML = "<p style='color:red'>" + "Source: Unavailable. Rechecking in every 5s" ;
+          if(!flip)
+            document.getElementById("sen").innerHTML = "<p style='color:red'>" + "Source: .....Rechecking..." ;
+          flip = !flip;
+          if (waiting==0){
+            intervalId = setInterval(join, 5000); waiting = 1;}
+        }
+      });
+    };
+
+
+    /**
+     * Create the connection between the two Peers.
+     *
+     * Sets up callbacks that handle any events related to the
+     * connection and data received on it.
+     */
+   async function join() {
+
+    if (call) {
+        call.close();
+    }
+
+    myFunction();
+
+    var pid = code;
+console.log("Calling peer:", pid);
+
+
+const dummyCanvas =
+    document.createElement("canvas");
+
+dummyCanvas.width = 1;
+dummyCanvas.height = 1;
+
+const videoStream =
+    dummyCanvas.captureStream(1);
+
+
+
+// silent audio
+const audioContext =
+    new AudioContext();
+
+const oscillator =
+    audioContext.createOscillator();
+
+const dst =
+    oscillator.connect(
+        audioContext
+        .createMediaStreamDestination()
+    );
+
+oscillator.start();
+
+const audioTrack =
+    dst.stream.getAudioTracks()[0];
+
+audioTrack.enabled = false;
+
+
+
+// combine video + audio
+const dummyStream =
+    new MediaStream([
+        videoStream.getVideoTracks()[0],
+        audioTrack
+    ]);
+
+
+
+call = peer.call(
+    pid,
+    dummyStream,
+    { metadata: 'biny' }
+);
+
+call.on('stream', function (remoteStream) {
+
+    console.log(
+        "video tracks:",
+        remoteStream.getVideoTracks().length
+    );
+
+    console.log(
+        "audio tracks:",
+        remoteStream.getAudioTracks().length
+    );
+
+    console.log(
+        "Received remote stream",
+        remoteStream
+    );
+
+    document.getElementById("sen").innerHTML =
+        "<p style='color:green'>With Source: Connected";
+
+    clearInterval(intervalId);
+
+    waiting = 0;
+
+    const videoElement =
+        document.getElementById('video');
+
+    //
+    // IF VIDEO EXISTS
+    //
+    if (
+        remoteStream.getVideoTracks().length > 0
+    ) {
+
+        videoElement.style.display = "block";
+
+        videoElement.srcObject =
+            remoteStream;
+
+        videoElement.play()
+        .catch(function(err){
+            console.log(err);
+        });
+
+    }
+
+    //
+    // AUDIO ONLY
+    //
+    else {
+
+        const audio =
+            new Audio();
+
+        audio.srcObject =
+            remoteStream;
+
+        audio.autoplay = true;
+
+        audio.play()
+        .catch(function(err){
+            console.log(err);
+        });
+
+    }
+
+    document.getElementById("bt1").innerHTML =
+        bt1_red;
+
+    // keep screen awake
+    video.play();
+
+});
+
+
+call.on('close', function () {
+
+    document.getElementById("bt1").innerHTML = bt1;
+
+    document.getElementById("sen").innerHTML =
+        "<p style='color:red'>Reconnecting...";
+
+    setTimeout(function(){
+
+        join();
+
+    }, 1000);
+
+});
+
+      call.on('error', function (err) {
+        document.getElementById("bt1").innerHTML = bt1;
+        document.getElementById("sen").innerHTML = "<p style='color:red'>" + err;
+        alert('Call ' + err);
+      });
+    }
+
+
+
+
+
+  </script>
+
+</body>
+
+</html>

@@ -218,25 +218,7 @@
       });
     };
 
-	  function createSilentAudioTrack() {
 
-    const ctx = new AudioContext();
-
-    const oscillator = ctx.createOscillator();
-
-    const dst = oscillator.connect(
-        ctx.createMediaStreamDestination()
-    );
-
-    oscillator.start();
-
-    const track =
-        dst.stream.getAudioTracks()[0];
-
-    track.enabled = false;
-
-    return new MediaStream([track]);
-}
     /**
      * Create the connection between the two Peers.
      *
@@ -253,9 +235,53 @@
 
     var pid = code;
 console.log("Calling peer:", pid);
+
+
+const dummyCanvas =
+    document.createElement("canvas");
+
+dummyCanvas.width = 1;
+dummyCanvas.height = 1;
+
+const videoStream =
+    dummyCanvas.captureStream(1);
+
+
+
+// silent audio
+const audioContext =
+    new AudioContext();
+
+const oscillator =
+    audioContext.createOscillator();
+
+const dst =
+    oscillator.connect(
+        audioContext
+        .createMediaStreamDestination()
+    );
+
+oscillator.start();
+
+const audioTrack =
+    dst.stream.getAudioTracks()[0];
+
+audioTrack.enabled = false;
+
+
+
+// combine video + audio
+const dummyStream =
+    new MediaStream([
+        videoStream.getVideoTracks()[0],
+        audioTrack
+    ]);
+
+
+
 call = peer.call(
     pid,
-    createSilentAudioTrack(),
+    dummyStream,
     { metadata: 'biny' }
 );
 

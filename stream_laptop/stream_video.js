@@ -15,8 +15,7 @@ function getParams(){
   return params;
 }
 params = getParams();
-//code = unescape(params["id"].split('#')[0]);
-code = "dailyprogram123"
+code = unescape(params["id"].split('#')[0]);
 console.log(code);
 
 var lastPeerId = null;
